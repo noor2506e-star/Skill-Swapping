@@ -1,0 +1,6 @@
+{
+  "name": "Skill Swapping Platform",
+  "description": "A premium matchmaking app for tech expo participants to swap skills, with live matchmaking and custom glassmorphic cards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
