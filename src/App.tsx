@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// ─── Particle System ──────────────────────────────────────────────────────────
-function ParticleCanvas() {
+// ─── Galaxy Nebula Background ─────────────────────────────────────────────────
+function GalaxyCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -13,51 +13,145 @@ function ParticleCanvas() {
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
 
-    interface Particle {
+    // ── Stars
+    interface Star {
       x: number; y: number; r: number;
-      vx: number; vy: number;
-      alpha: number; alphaDir: number;
+      alpha: number; alphaSpeed: number;
+      glimmer: boolean;
     }
 
-    const particles: Particle[] = Array.from({ length: 80 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      r: Math.random() * 2 + 0.5,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      alpha: Math.random() * 0.5 + 0.1,
-      alphaDir: (Math.random() - 0.5) * 0.005,
-    }));
+    const makeStars = (): Star[] =>
+      Array.from({ length: 220 }, () => {
+        const bright = Math.random() < 0.12;
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: bright ? Math.random() * 1.8 + 0.8 : Math.random() * 1.0 + 0.2,
+          alpha: Math.random() * 0.5 + (bright ? 0.5 : 0.15),
+          alphaSpeed: (Math.random() * 0.006 + 0.001) * (Math.random() < 0.5 ? 1 : -1),
+          glimmer: bright,
+        };
+      });
 
+    let stars = makeStars();
+
+    // ── Nebula cloud definitions (static layout, animated opacity)
+    const nebulae = [
+      // top-left bright magenta
+      { x: 0.05, y: -0.05, rx: 0.38, ry: 0.28, color: '180,60,255', alpha: 0.22, speed: 0.00035, phase: 0 },
+      // top-left secondary
+      { x: 0.0,  y: 0.08,  rx: 0.30, ry: 0.22, color: '140,30,210', alpha: 0.18, speed: 0.00025, phase: 1.1 },
+      // bottom-left cloud
+      { x: 0.0,  y: 0.88,  rx: 0.35, ry: 0.26, color: '160,20,230', alpha: 0.24, speed: 0.00040, phase: 2.3 },
+      // bottom-center cloud
+      { x: 0.3,  y: 0.95,  rx: 0.30, ry: 0.20, color: '190,50,255', alpha: 0.20, speed: 0.00030, phase: 0.7 },
+      // bottom-center-right
+      { x: 0.6,  y: 0.90,  rx: 0.30, ry: 0.20, color: '140,30,200', alpha: 0.18, speed: 0.00028, phase: 1.8 },
+      // top-right subtle
+      { x: 0.85, y: 0.05,  rx: 0.25, ry: 0.18, color: '120,20,190', alpha: 0.12, speed: 0.00020, phase: 3.0 },
+      // center dark hole (deepens contrast)
+      { x: 0.5,  y: 0.45,  rx: 0.22, ry: 0.18, color: '10,0,20',    alpha: 0.35, speed: 0.00015, phase: 0.5 },
+      // soft right highlight
+      { x: 0.78, y: 0.55,  rx: 0.20, ry: 0.15, color: '170,40,240', alpha: 0.10, speed: 0.00022, phase: 2.0 },
+    ];
+
+    let t = 0;
     let raf: number;
-    const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      particles.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        p.alpha += p.alphaDir;
-        if (p.alpha <= 0.05) p.alphaDir = Math.abs(p.alphaDir);
-        if (p.alpha >= 0.7) p.alphaDir = -Math.abs(p.alphaDir);
-        if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
+
+    const drawBackground = () => {
+      // Deep space base
+      const bg = ctx.createLinearGradient(0, 0, width * 0.3, height);
+      bg.addColorStop(0,   '#0d001a');
+      bg.addColorStop(0.3, '#08000f');
+      bg.addColorStop(0.6, '#06000b');
+      bg.addColorStop(1,   '#0a0010');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+    };
+
+    const drawNebulae = () => {
+      nebulae.forEach(n => {
+        const pulse = Math.sin(t * n.speed * Math.PI * 2 * 60 + n.phase) * 0.08;
+        const a = Math.max(0, n.alpha + pulse);
+        const cx = n.x * width;
+        const cy = n.y * height;
+        const rx = n.rx * width;
+        const ry = n.ry * height;
+
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+        grad.addColorStop(0,   `rgba(${n.color},${a})`);
+        grad.addColorStop(0.4, `rgba(${n.color},${a * 0.55})`);
+        grad.addColorStop(0.75,`rgba(${n.color},${a * 0.18})`);
+        grad.addColorStop(1,   `rgba(${n.color},0)`);
+
+        ctx.save();
+        ctx.scale(1, ry / rx); // ellipse
+        ctx.beginPath();
+        ctx.arc(cx, cy * (rx / ry), rx, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.restore();
+      });
+    };
+
+    const drawStars = () => {
+      stars.forEach(s => {
+        // Twinkle
+        s.alpha += s.alphaSpeed;
+        if (s.alpha > (s.glimmer ? 1.0 : 0.75)) s.alphaSpeed = -Math.abs(s.alphaSpeed);
+        if (s.alpha < 0.05) s.alphaSpeed = Math.abs(s.alphaSpeed);
+
+        if (s.glimmer && s.alpha > 0.75) {
+          // Cross glimmer for bright stars
+          const glow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 4);
+          glow.addColorStop(0,   `rgba(255,255,255,${s.alpha * 0.4})`);
+          glow.addColorStop(1,   `rgba(255,255,255,0)`);
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r * 4, 0, Math.PI * 2);
+          ctx.fillStyle = glow;
+          ctx.fill();
+        }
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(139,92,246,${p.alpha})`;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+        ctx.shadowBlur = s.glimmer ? 6 : 0;
+        ctx.shadowColor = 'rgba(220,200,255,0.8)';
         ctx.fill();
+        ctx.shadowBlur = 0;
       });
-      raf = requestAnimationFrame(draw);
     };
-    draw();
+
+    const frame = () => {
+      t++;
+      drawBackground();
+      drawNebulae();
+      drawStars();
+      raf = requestAnimationFrame(frame);
+    };
+    frame();
 
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      stars = makeStars();
     };
     window.addEventListener('resize', handleResize);
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', handleResize); };
   }, []);
 
-  return <canvas ref={canvasRef} id="particles-canvas" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'fixed',
+        top: 0, left: 0,
+        width: '100%', height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
+    />
+  );
 }
 
 // ─── Hook: Scroll Animations ──────────────────────────────────────────────────
@@ -191,15 +285,8 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#07070A', color: '#fff', position: 'relative' }}>
-      <ParticleCanvas />
-
-      {/* ── Glow Orbs ── */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div className="glow-orb glow-orb-1" />
-        <div className="glow-orb glow-orb-2" />
-        <div className="glow-orb glow-orb-3" />
-      </div>
+    <div style={{ minHeight: '100vh', background: 'transparent', color: '#fff', position: 'relative' }}>
+      <GalaxyCanvas />
 
       {/* ──────────────────── NAVBAR ──────────────────── */}
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`} style={{ zIndex: 200 }}>
@@ -405,7 +492,7 @@ export default function App() {
       </section>
 
       {/* ──────────────────── HOW IT WORKS ──────────────────── */}
-      <section id="how-it-works" className="section" style={{ background: 'rgba(255,255,255,0.01)', position: 'relative', zIndex: 10 }}>
+      <section id="how-it-works" className="section" style={{ position: 'relative', zIndex: 10 }}>
         <div className="section-inner">
           <div style={{ textAlign: 'center', marginBottom: '72px' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>The Process</div>
@@ -499,7 +586,7 @@ export default function App() {
       </section>
 
       {/* ──────────────────── STATISTICS ──────────────────── */}
-      <section className="section" style={{ background: 'rgba(255,255,255,0.01)', position: 'relative', zIndex: 10 }}>
+      <section className="section" style={{ position: 'relative', zIndex: 10 }}>
         <div className="section-inner">
           <div style={{ textAlign: 'center', marginBottom: '60px' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>By The Numbers</div>
@@ -556,7 +643,7 @@ export default function App() {
       </section>
 
       {/* ──────────────────── FAQ ──────────────────── */}
-      <section id="faq" className="section" style={{ background: 'rgba(255,255,255,0.01)', position: 'relative', zIndex: 10 }}>
+      <section id="faq" className="section" style={{ position: 'relative', zIndex: 10 }}>
         <div className="section-inner">
           <div style={{ textAlign: 'center', marginBottom: '60px' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>FAQ</div>
