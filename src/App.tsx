@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Cpu, Globe2, MessageCircle, Star, Target, Users } from 'lucide-react';
 
 // ─── Galaxy Nebula Background ─────────────────────────────────────────────────
 function GalaxyCanvas() {
@@ -231,13 +232,19 @@ function FAQItem({ q, a, isOpen, onToggle }: { q: string; a: string; isOpen: boo
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const FEATURES = [
-  { icon: '🎯', title: 'Smart Skill Matching', desc: 'Our AI-powered engine analyzes your skills and learning goals to surface the most compatible partners in seconds.' },
-  { icon: '🤝', title: 'Find Learning Partners', desc: 'Connect with thousands of skilled individuals who are eager to teach what they know and learn what you offer.' },
-  { icon: '💬', title: 'Real-Time Chat', desc: 'Jump into secure, real-time conversations the moment a match is made. No delays, no barriers—just pure collaboration.' },
-  { icon: '⭐', title: 'Ratings & Reviews', desc: 'Build trust through a transparent review system. Rate partners after each session and grow your reputation.' },
-  { icon: '🌍', title: 'Global Community', desc: 'Connect with learners and teachers from 150+ countries. Your next mentor could be across the street or across the globe.' },
-  { icon: '🧠', title: 'AI Recommendations', desc: 'Our intelligent system continuously learns from your activity and suggests new skills, partners, and learning paths for you.' },
+type Feature = {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  title: string;
+  desc: string;
+};
+
+const FEATURES: Feature[] = [
+  { icon: Target, title: 'Smart Skill Matching', desc: 'Our AI-powered engine analyzes your skills and learning goals to surface the most compatible partners in seconds.' },
+  { icon: Users, title: 'Find Learning Partners', desc: 'Connect with thousands of skilled individuals who are eager to teach what they know and learn what you offer.' },
+  { icon: MessageCircle, title: 'Real-Time Chat', desc: 'Jump into secure, real-time conversations the moment a match is made. No delays, no barriers—just pure collaboration.' },
+  { icon: Star, title: 'Ratings & Reviews', desc: 'Build trust through a transparent review system. Rate partners after each session and grow your reputation.' },
+  { icon: Globe2, title: 'Global Community', desc: 'Connect with learners and teachers from 150+ countries. Your next mentor could be across the street or across the globe.' },
+  { icon: Cpu, title: 'AI Recommendations', desc: 'Our intelligent system continuously learns from your activity and suggests new skills, partners, and learning paths for you.' },
 ];
 
 const PROFILES = [
@@ -480,13 +487,18 @@ export default function App() {
           </div>
 
           <div className="features-grid">
-            {FEATURES.map((f, i) => (
-              <div key={i} className={`feature-card fade-in fade-in-delay-${(i % 3) + 1}`}>
-                <div className="feature-icon">{f.icon}</div>
-                <h3 className="feature-title">{f.title}</h3>
-                <p className="feature-desc">{f.desc}</p>
-              </div>
-            ))}
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <div key={i} className={`feature-card fade-in fade-in-delay-${(i % 3) + 1}`}>
+                  <div className="feature-icon">
+                    <Icon className="feature-icon-svg" />
+                  </div>
+                  <h3 className="feature-title">{f.title}</h3>
+                  <p className="feature-desc">{f.desc}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
