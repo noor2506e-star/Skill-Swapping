@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Cpu, Globe2, MessageCircle, Star, Target, Users } from 'lucide-react';
+import { 
+  Cpu, Globe2, MessageCircle, Star, Target, Users, 
+  Sparkles, Rocket, Search, Home, User, Tag, 
+  Handshake, Zap, ShieldCheck, Users2, Sparkle,
+  Eye, EyeOff, Mail, Lock, X, Github
+} from 'lucide-react';
 
 // ─── Galaxy Nebula Background ─────────────────────────────────────────────────
 function GalaxyCanvas() {
@@ -272,11 +277,100 @@ const FAQS = [
   { q: 'Is my personal data safe?', a: 'Absolutely. We use end-to-end encryption for all chats, and your contact details are only shared after both parties agree to a swap. Your privacy is paramount.' },
 ];
 
+// ─── Auth Modal Component ─────────────────────────────────────────────────────
+function AuthModal({ isOpen, type, onClose, onSwitch }: { isOpen: boolean; type: 'login' | 'signup' | null; onClose: () => void; onSwitch: (type: 'login' | 'signup') => void }) {
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // reset on type change
+  useEffect(() => setShowPassword(false), [type]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>
+          <X style={{ width: '18px', height: '18px' }} />
+        </button>
+
+        <h2 className="modal-title gradient-text-hero">
+          {type === 'login' ? 'Welcome Back' : 'Join SkillSwap'}
+        </h2>
+        <p className="modal-subtitle">
+          {type === 'login' 
+            ? 'Access your account to continue swapping skills.' 
+            : 'Create an account to start your skill exchange journey.'}
+        </p>
+
+        <form onSubmit={(e) => { e.preventDefault(); /* Handle auth */ }}>
+          {type === 'signup' && (
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <div className="input-icon-wrapper">
+                <User style={{ width: '18px', height: '18px' }} className="input-icon" />
+                <input type="text" className="form-input" placeholder="Sara Kim" required />
+              </div>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <div className="input-icon-wrapper">
+              <Mail style={{ width: '18px', height: '18px' }} className="input-icon" />
+              <input type="email" className="form-input" placeholder="sara@example.com" required />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div className="input-icon-wrapper">
+              <Lock style={{ width: '18px', height: '18px' }} className="input-icon" />
+              <input 
+                type={showPassword ? "text" : "password"} 
+                className="form-input" 
+                placeholder={type === 'login' ? '••••••••' : 'At least 8 characters'} 
+                required 
+              />
+              <button 
+                type="button" 
+                className="input-action" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff style={{ width: '18px', height: '18px' }} /> : <Eye style={{ width: '18px', height: '18px' }} />}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" className="btn-primary form-submit">
+            <span>{type === 'login' ? 'Log In' : 'Create Account'}</span>
+          </button>
+        </form>
+
+        <div className="auth-divider">or continue with</div>
+
+        <button type="button" className="social-login-btn">
+          <Github style={{ width: '18px', height: '18px' }} />
+          GitHub
+        </button>
+
+        <div className="auth-switch">
+          {type === 'login' ? (
+            <>Don't have an account? <button onClick={() => onSwitch('signup')}>Sign up</button></>
+          ) : (
+            <>Already have an account? <button onClick={() => onSwitch('login')}>Log in</button></>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModal, setAuthModal] = useState<'login' | 'signup' | null>(null);
 
   useScrollAnimation();
 
@@ -319,8 +413,8 @@ export default function App() {
 
         {/* Right Actions */}
         <div className="nav-actions">
-          <a href="#" className="nav-login">Login</a>
-          <button className="btn-primary" style={{ padding: '10px 22px', fontSize: '14px' }} onClick={() => scrollTo('cta')}>
+          <button className="nav-login" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} onClick={() => setAuthModal('login')}>Login</button>
+          <button className="btn-primary" style={{ padding: '10px 22px', fontSize: '14px' }} onClick={() => setAuthModal('signup')}>
             <span>Get Started</span>
           </button>
           <button className="nav-toggle" onClick={() => setMobileMenuOpen(o => !o)}>☰</button>
@@ -354,9 +448,10 @@ export default function App() {
 
           {/* Badge */}
           <div style={{ textAlign: 'center' }}>
-            <div className="hero-badge fade-in" style={{ display: 'inline-flex' }}>
+            <div className="hero-badge fade-in" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ADE80', animation: 'badge-pulse 1.5s ease-in-out infinite', boxShadow: '0 0 8px #4ADE80' }} />
-              ✨ The future of skill exchange is here
+              <Sparkles style={{ width: '16px', height: '16px', color: '#A855F7' }} />
+              The future of skill exchange is here
             </div>
           </div>
 
@@ -376,11 +471,13 @@ export default function App() {
 
           {/* CTA Buttons */}
           <div className="hero-cta fade-in fade-in-delay-3">
-            <button className="btn-primary magnetic-btn" onClick={() => scrollTo('features')} style={{ fontSize: '16px', padding: '16px 36px', borderRadius: '14px' }}>
-              <span>🚀 Get Started Free</span>
+            <button className="btn-primary magnetic-btn" onClick={() => setAuthModal('signup')} style={{ fontSize: '16px', padding: '16px 36px', borderRadius: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Rocket style={{ width: '20px', height: '20px' }} />
+              <span>Get Started Free</span>
             </button>
-            <button className="btn-glass magnetic-btn" onClick={() => scrollTo('community')} style={{ fontSize: '16px', borderRadius: '14px' }}>
-              🔍 Explore Skills
+            <button className="btn-glass magnetic-btn" onClick={() => scrollTo('community')} style={{ fontSize: '16px', borderRadius: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Search style={{ width: '20px', height: '20px' }} />
+              Explore Skills
             </button>
           </div>
 
@@ -393,8 +490,8 @@ export default function App() {
                 <div className="mockup-dot red" />
                 <div className="mockup-dot yellow" />
                 <div className="mockup-dot green" />
-                <div className="mockup-search">
-                  <span>🔍</span>
+                <div className="mockup-search" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Search style={{ width: '16px', height: '16px', color: '#71717A' }} />
                   <span>Search skills, partners...</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
@@ -407,9 +504,15 @@ export default function App() {
                 {/* Sidebar */}
                 <div className="mockup-sidebar">
                   <div style={{ fontSize: '10px', color: '#3F3F46', marginBottom: '6px', letterSpacing: '1px', textTransform: 'uppercase' }}>Navigation</div>
-                  {[['🏠', 'Dashboard', true], ['🎯', 'My Matches', false], ['💬', 'Messages', false], ['⭐', 'Reviews', false], ['🌍', 'Explore', false]].map(([icon, label, active], i) => (
+                  {[
+                    { Icon: Home, label: 'Dashboard', active: true },
+                    { Icon: Target, label: 'My Matches', active: false },
+                    { Icon: MessageCircle, label: 'Messages', active: false },
+                    { Icon: Star, label: 'Reviews', active: false },
+                    { Icon: Globe2, label: 'Explore', active: false }
+                  ].map(({ Icon, label, active }, i) => (
                     <div key={i} className={`sidebar-item${active ? ' active' : ''}`}>
-                      <span>{icon}</span>
+                      <Icon style={{ width: '16px', height: '16px' }} />
                       <span>{label}</span>
                       {active && <div className="sidebar-dot" style={{ marginLeft: 'auto' }} />}
                     </div>
@@ -429,7 +532,10 @@ export default function App() {
 
                 {/* Main Content */}
                 <div className="mockup-content">
-                  <div style={{ fontSize: '11px', color: '#52525B', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>🎯 Top Matches For You</div>
+                  <div style={{ fontSize: '11px', color: '#52525B', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Target style={{ width: '14px', height: '14px' }} />
+                    Top Matches For You
+                  </div>
 
                   {[
                     { initials: 'SK', bg: 'linear-gradient(135deg,#7C3AED,#6D28D9)', name: 'Sara Kim', skill: 'React → Python', badge: 'Perfect Match', badgeClass: 'perfect' },
@@ -447,7 +553,10 @@ export default function App() {
                   ))}
 
                   <div className="ai-rec-box">
-                    <div className="ai-rec-title">🧠 AI Recommendation</div>
+                    <div className="ai-rec-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Cpu style={{ width: '16px', height: '16px' }} />
+                      AI Recommendation
+                    </div>
                     <div>Based on your profile, you'd excel at:</div>
                     <div style={{ marginTop: '6px' }}>
                       {['TypeScript', 'Next.js', 'GraphQL'].map(t => (
@@ -519,11 +628,11 @@ export default function App() {
 
           <div className="steps-row fade-in">
             {[
-              { icon: '👤', step: '01', title: 'Create Profile', desc: 'Sign up in 60 seconds and build your skill profile with everything you can teach.' },
-              { icon: '🏷️', step: '02', title: 'Add Skills', desc: 'List skills you offer and skills you want to learn. Be as specific or broad as you like.' },
-              { icon: '🤝', step: '03', title: 'Match with People', desc: 'Our AI finds your best matches instantly based on mutual skill needs.' },
-              { icon: '🚀', step: '04', title: 'Start Learning', desc: 'Connect, schedule a session, and begin your skill exchange journey today.' },
-            ].map((s, i) => (
+              { Icon: User, step: '01', title: 'Create Profile', desc: 'Sign up in 60 seconds and build your skill profile with everything you can teach.' },
+              { Icon: Tag, step: '02', title: 'Add Skills', desc: 'List skills you offer and skills you want to learn. Be as specific or broad as you like.' },
+              { Icon: Handshake, step: '03', title: 'Match with People', desc: 'Our AI finds your best matches instantly based on mutual skill needs.' },
+              { Icon: Rocket, step: '04', title: 'Start Learning', desc: 'Connect, schedule a session, and begin your skill exchange journey today.' },
+            ].map(({ Icon, step, title, desc }, i) => (
               <div key={i} className="step-item" style={{ animationDelay: `${i * 0.1}s` }}>
                 {i < 3 && (
                   <div style={{
@@ -531,15 +640,15 @@ export default function App() {
                     background: 'linear-gradient(90deg, rgba(139,92,246,0.6), rgba(139,92,246,0.15))',
                   }} />
                 )}
-                <div className="step-number" style={{ position: 'relative', zIndex: 1 }}>
-                  <span style={{ fontSize: '24px' }}>{s.icon}</span>
+                <div className="step-number" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon style={{ width: '24px', height: '24px' }} />
                 </div>
                 <div style={{
                   position: 'absolute', top: '-8px', right: '50%', transform: 'translateX(24px)',
                   fontSize: '10px', fontWeight: 700, color: '#8B5CF6', letterSpacing: '1px'
-                }}>{s.step}</div>
-                <h3 className="step-title">{s.title}</h3>
-                <p className="step-desc">{s.desc}</p>
+                }}>{step}</div>
+                <h3 className="step-title">{title}</h3>
+                <p className="step-desc">{desc}</p>
               </div>
             ))}
           </div>
@@ -685,7 +794,8 @@ export default function App() {
         <div className="cta-bg-glow" />
         <div className="cta-card fade-in">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 500, color: '#C084FC', marginBottom: '28px', position: 'relative' }}>
-            🎉 Join 50,000+ learners today
+            <Sparkle style={{ width: '16px', height: '16px' }} />
+            Join 50,000+ learners today
           </div>
           <h2 className="cta-title">
             Start Swapping Skills<br />
@@ -695,8 +805,9 @@ export default function App() {
             No credit card required. Create your profile, add your skills, and be matched in minutes.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
-            <button className="btn-primary" style={{ fontSize: '17px', padding: '18px 42px', borderRadius: '16px' }}>
-              <span>✨ Join Free — No Credit Card</span>
+            <button className="btn-primary" onClick={() => setAuthModal('signup')} style={{ fontSize: '17px', padding: '18px 42px', borderRadius: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles style={{ width: '20px', height: '20px' }} />
+              <span>Join Free — No Credit Card</span>
             </button>
             <button className="btn-glass" style={{ fontSize: '17px', borderRadius: '16px' }}>
               See How It Works →
@@ -705,8 +816,16 @@ export default function App() {
 
           {/* Trust badges */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '32px', marginTop: '44px', flexWrap: 'wrap' }}>
-            {['🔒 Secure & Private', '⚡ Instant Matching', '🌍 Global Community', '💸 Always Free'].map(b => (
-              <div key={b} style={{ fontSize: '13px', color: '#52525B', display: 'flex', alignItems: 'center', gap: '4px' }}>{b}</div>
+            {[
+              { Icon: ShieldCheck, text: 'Secure & Private' },
+              { Icon: Zap, text: 'Instant Matching' },
+              { Icon: Users2, text: 'Global Community' },
+              { Icon: Sparkle, text: 'Always Free' }
+            ].map(({ Icon, text }, i) => (
+              <div key={i} style={{ fontSize: '13px', color: '#52525B', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon style={{ width: '16px', height: '16px' }} />
+                {text}
+              </div>
             ))}
           </div>
         </div>
@@ -780,6 +899,13 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <AuthModal 
+        isOpen={authModal !== null} 
+        type={authModal} 
+        onClose={() => setAuthModal(null)} 
+        onSwitch={(type) => setAuthModal(type)} 
+      />
     </div>
   );
 }
